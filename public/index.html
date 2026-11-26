@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tienda de Ropa — Panel API</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <style>
+    .token-box {
+      word-break: break-all;
+      font-size: 0.85rem;
+      max-height: 6rem;
+      overflow-y: auto;
+      padding: 0.75rem;
+      border-radius: var(--pico-border-radius);
+      background: var(--pico-code-background-color);
+    }
+    .status-msg {
+      padding: 0.75rem 1rem;
+      border-radius: var(--pico-border-radius);
+      margin-bottom: 1rem;
+      border-left: 4px solid var(--pico-primary);
+      background: var(--pico-card-background-color);
+    }
+    .status-msg.error {
+      border-left-color: #c62828;
+      color: #c62828;
+    }
+    .status-msg[hidden] {
+      display: none;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: var(--pico-primary-background);
+      color: var(--pico-primary-inverse);
+    }
+    .actions-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+    }
+    .table-scroll {
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <header class="container">
+    <nav>
+      <ul>
+        <li><strong>Tienda de Ropa</strong></li>
+      </ul>
+      <ul>
+        <li><a href="#catalogo">Catálogo</a></li>
+        <li><a href="#envios">Envíos</a></li>
+        <li><a href="#nuevo-envio">Nuevo envío</a></li>
+        <li><a href="/api-docs" target="_blank" rel="noopener noreferrer" role="button" class="outline">Swagger UI (/api-docs)</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div id="status-banner" class="status-msg" role="status" aria-live="polite" hidden></div>
+
+    <section aria-labelledby="auth-heading">
+      <article>
+        <header>
+          <h2 id="auth-heading">Sesión y selector de rol rápido</h2>
+        </header>
+        <div class="actions-row">
+          <button type="button" id="btn-login-vendedor">Entrar como Vendedor (vendedor@tienda.mx)</button>
+          <button type="button" id="btn-login-cliente" class="secondary">Entrar como Cliente (sofia.mendoza@correo.mx)</button>
+          <button type="button" id="btn-logout" class="outline contrast">Cerrar sesión</button>
+        </div>
+        <hr>
+        <p>
+          <strong>Rol actual:</strong>
+          <span id="current-role" class="badge">Sin sesión</span>
+          <small id="current-email"></small>
+        </p>
+        <label for="current-token"><strong>Token JWT actual:</strong></label>
+        <pre id="current-token" class="token-box">(Sin token)</pre>
+      </article>
+    </section>
+
+    <section id="catalogo" aria-labelledby="catalogo-heading">
+      <div class="actions-row" style="justify-content: space-between; margin-bottom: 1rem;">
+        <h2 id="catalogo-heading" style="margin-bottom: 0;">Catálogo de Prendas y Colecciones</h2>
+        <button type="button" id="btn-refresh-catalogo" class="outline">Actualizar catálogo</button>
+      </div>
+
+      <article>
+        <header><h3>Colecciones</h3></header>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Año</th>
+                <th>Descripción</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-colecciones">
+              <tr><td colspan="4">Cargando colecciones...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article>
+        <header><h3>Prendas</h3></header>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Talla</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Colección</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-prendas">
+              <tr><td colspan="6">Cargando prendas...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <section id="envios" aria-labelledby="envios-heading">
+      <div class="actions-row" style="justify-content: space-between; margin-bottom: 1rem;">
+        <div>
+          <h2 id="envios-heading" style="margin-bottom: 0.25rem;">Envíos</h2>
+          <small id="envios-scope">Inicia sesión para consultar los envíos.</small>
+        </div>
+        <button type="button" id="btn-refresh-envios" class="outline">Actualizar envíos</button>
+      </div>
+
+      <article>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Fecha despacho</th>
+                <th>Paquetería</th>
+                <th>Número de guía</th>
+                <th>Estatus</th>
+                <th>Cantidad</th>
+                <th>Cliente ID</th>
+                <th>Prenda ID</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-envios">
+              <tr><td colspan="8">Inicia sesión como Vendedor o Cliente para ver los envíos.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <section id="nuevo-envio" aria-labelledby="nuevo-envio-heading">
+      <article>
+        <header>
+          <h2 id="nuevo-envio-heading">Crear nuevo envío</h2>
+        </header>
+        <form id="form-nuevo-envio">
+          <div class="grid">
+            <label>
+              Fecha de despacho
+              <input type="date" name="fecha_despacho" id="input-fecha" required>
+            </label>
+            <label>
+              Paquetería
+              <input type="text" name="paqueteria" id="input-paqueteria" list="paqueterias-list" placeholder="DHL Express" required>
+              <datalist id="paqueterias-list">
+                <option value="DHL Express"></option>
+                <option value="Estafeta"></option>
+                <option value="FedEx"></option>
+                <option value="UPS"></option>
+                <option value="Paquetexpress"></option>
+              </datalist>
+            </label>
+            <label>
+              Número de guía
+              <input type="text" name="numero_guia" id="input-guia" placeholder="DHL-MX-900999" required>
+            </label>
+          </div>
+
+          <div class="grid">
+            <label>
+              Estatus
+              <select name="estatus" id="input-estatus" required>
+                <option value="En preparación">En preparación</option>
+                <option value="Enviado">Enviado</option>
+                <option value="En tránsito">En tránsito</option>
+                <option value="Entregado">Entregado</option>
+              </select>
+            </label>
+            <label>
+              Cantidad
+              <input type="number" name="cantidad" id="input-cantidad" min="1" value="1" required>
+            </label>
+            <label>
+              Cliente ID
+              <input type="number" name="cliente_id" id="input-cliente-id" min="1" value="1" required>
+            </label>
+            <label>
+              Prenda
+              <select name="prenda_id" id="input-prenda-id" required>
+                <option value="">Selecciona una prenda...</option>
+              </select>
+            </label>
+          </div>
+
+          <button type="submit">Registrar envío</button>
+        </form>
+      </article>
+    </section>
+  </main>
+
+  <script src="/app.js" defer></script>
+</body>
+</html>

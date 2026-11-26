@@ -1,0 +1,38 @@
+erDiagram
+    COLECCIONES ||--o{ PRENDAS : "1 colección tiene muchas prendas"
+    CLIENTES ||--o{ ENVIOS : "1 cliente realiza muchos envíos"
+    PRENDAS ||--o{ ENVIOS : "1 prenda se despacha en muchos envíos"
+
+    COLECCIONES {
+        int id PK "SERIAL - Identificador único"
+        varchar nombre "VARCHAR(100) NOT NULL"
+        int anio "INT NOT NULL - Año de temporada"
+        text descripcion "TEXT NOT NULL - Detalle de la línea"
+    }
+
+    PRENDAS {
+        int id PK "SERIAL - Identificador único"
+        varchar nombre "VARCHAR(150) NOT NULL"
+        varchar talla "VARCHAR(10) NOT NULL (S, M, L, XL)"
+        numeric precio "NUMERIC(10,2) CHECK >= 0"
+        int stock "INT CHECK >= 0 - Inventario disponible"
+        int coleccion_id FK "INT NOT NULL -> colecciones(id)"
+    }
+
+    CLIENTES {
+        int id PK "SERIAL - Identificador único"
+        varchar nombre "VARCHAR(150) NOT NULL"
+        text direccion_envio "TEXT NOT NULL - Domicilio de entrega"
+        varchar correo UK "VARCHAR(150) UNIQUE NOT NULL"
+    }
+
+    ENVIOS {
+        int id PK "SERIAL - Clave primaria (8 columnas)"
+        date fecha_despacho "DATE NOT NULL - Fecha de salida"
+        varchar paqueteria "VARCHAR(100) NOT NULL (DHL, FedEx, Estafeta)"
+        varchar numero_guia "VARCHAR(100) NOT NULL - Tracking"
+        varchar estatus "VARCHAR(50) NOT NULL (Preparando, En tránsito, Entregado)"
+        int cantidad "INT CHECK > 0 - Unidades despachadas"
+        int cliente_id FK "INT NOT NULL -> clientes(id)"
+        int prenda_id FK "INT NOT NULL -> prendas(id)"
+    }
